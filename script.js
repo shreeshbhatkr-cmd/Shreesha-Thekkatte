@@ -1,0 +1,140 @@
+const root = document.documentElement;
+let lightFrame = null;
+
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
+if (!window.location.hash) {
+  window.addEventListener("pageshow", () => {
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+  });
+}
+
+function moveStageLight(event) {
+  if (lightFrame) return;
+  lightFrame = requestAnimationFrame(() => {
+    root.style.setProperty("--spot-x", `${event.clientX}px`);
+    root.style.setProperty("--spot-y", `${event.clientY}px`);
+    lightFrame = null;
+  });
+}
+
+window.addEventListener("pointermove", moveStageLight, { passive: true });
+
+const revealTargets = document.querySelectorAll(
+  ".hero, .manifesto, .signature, .spotlight, .stats, .project-card, .gallery figure"
+);
+
+const observer = new IntersectionObserver(
+  entries => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-seen");
+        observer.unobserve(entry.target);
+      }
+    }
+  },
+  { threshold: 0.14 }
+);
+
+revealTargets.forEach((target, index) => {
+  target.style.transitionDelay = `${Math.min(index * 28, 420)}ms`;
+  observer.observe(target);
+});
+
+const productionPhotoSets = [
+  ["performance-01-02.jpg", "performance-01-04.jpg", "performance-02-02.jpg", "performance-02-04.jpg"],
+  ["performance-03-02.jpg", "performance-03-04.jpg", "performance-04-02.jpg", "performance-04-03.jpg"],
+  ["performance-05-02.jpg", "performance-05-04.jpg", "performance-06-02.jpg", "performance-06-04.jpg"],
+  ["performance-07-02.jpg", "performance-08-02.jpg", "performance-08-04.jpg"],
+  ["performance-09-02.jpg", "performance-10-02.jpg", "performance-10-04.jpg"],
+  ["performance-11-02.jpg", "performance-11-04.jpg", "performance-12-02.jpg", "performance-12-04.jpg", "performance-13-02.jpg", "performance-13-04.jpg"],
+  ["performance-14-02.jpg", "performance-14-04.jpg", "performance-15-02.jpg", "performance-15-04.jpg", "performance-16-02.jpg", "performance-16-04.jpg"],
+  ["performance-19-01.jpg", "performance-19-03.jpg"],
+  ["performance-20-01.jpg", "performance-20-03.jpg", "performance-21-01.jpg", "performance-21-03.jpg"],
+  ["performance-22-01.jpg", "performance-22-03.jpg"],
+  ["performance-23-01.jpg", "performance-23-03.jpg", "performance-24-01.jpg", "performance-24-03.jpg"],
+  ["performance-25-01.jpg", "performance-25-03.jpg", "performance-26-01.jpg", "performance-26-03.jpg"],
+  ["performance-27-01.jpg", "performance-27-03.jpg", "performance-28-01.jpg"],
+  ["performance-28-01.jpg"],
+  ["performance-32-01.jpg"],
+  ["performance-32-01.jpg"],
+  ["performance-33-01.jpg", "performance-34-01.jpg", "performance-34-03.jpg"]
+];
+
+const modal = document.querySelector("#productionModal");
+const modalTitle = document.querySelector("#productionModalTitle");
+const modalGrid = document.querySelector("#productionModalGrid");
+const closeControls = document.querySelectorAll("[data-close-modal]");
+let activeProductionCard = null;
+
+function openProductionPhotos(card, index) {
+  const title = card.querySelector("h3")?.textContent.trim() || "Production";
+  const photos = productionPhotoSets[index] || [];
+
+  activeProductionCard = card;
+  modalTitle.textContent = title;
+  modalGrid.innerHTML = photos
+    .map((photo, photoIndex) => `
+      <figure>
+        <img src="assets/${photo}" alt="${title} production photo ${photoIndex + 1}">
+        <figcaption>${String(photoIndex + 1).padStart(2, "0")} / ${photos.length}</figcaption>
+      </figure>
+    `)
+    .join("");
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  modal.querySelector(".production-modal__close").focus();
+}
+
+function closeProductionPhotos() {
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  modalGrid.innerHTML = "";
+  if (activeProductionCard) activeProductionCard.focus();
+}
+
+document.querySelectorAll(".project-card").forEach((card, index) => {
+  card.setAttribute("role", "button");
+  card.setAttribute("tabindex", "0");
+  card.setAttribute("aria-label", `Open photos for ${card.querySelector("h3")?.textContent.trim() || "production"}`);
+
+  const cue = document.createElement("span");
+  cue.className = "photo-cue";
+  cue.textContent = `View ${productionPhotoSets[index]?.length || 0} photos`;
+  card.append(cue);
+
+  card.addEventListener("click", () => openProductionPhotos(card, index));
+  card.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openProductionPhotos(card, index);
+    }
+  });
+});
+
+closeControls.forEach(control => {
+  control.addEventListener("click", closeProductionPhotos);
+});
+
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape" && modal.classList.contains("is-open")) {
+    closeProductionPhotos();
+  }
+});
+
+const productionRail = document.querySelector(".projects");
+document.querySelectorAll("[data-scroll-productions]").forEach(button => {
+  button.addEventListener("click", () => {
+    if (!productionRail) return;
+    const direction = Number(button.dataset.scrollProductions);
+    productionRail.scrollBy({
+      left: direction * Math.min(420, productionRail.clientWidth * .78),
+      behavior: "smooth"
+    });
+  });
+});
