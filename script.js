@@ -47,21 +47,39 @@ const productionPhotoSets = [
   ["performance-01-02.jpg", "performance-01-04.jpg", "performance-02-02.jpg", "performance-02-04.jpg"],
   ["performance-03-02.jpg", "performance-03-04.jpg", "performance-04-02.jpg", "performance-04-03.jpg"],
   ["performance-05-02.jpg", "performance-05-04.jpg", "performance-06-02.jpg", "performance-06-04.jpg"],
-  ["performance-07-02.jpg", "performance-08-02.jpg", "performance-08-04.jpg"],
+  ["performance-07-02.jpg", "performance-07-04.jpg", "performance-08-02.jpg", "performance-08-04.jpg"],
   ["performance-09-02.jpg", "performance-10-02.jpg", "performance-10-04.jpg"],
   ["performance-11-02.jpg", "performance-11-04.jpg", "performance-12-02.jpg", "performance-12-04.jpg", "performance-13-02.jpg", "performance-13-04.jpg"],
   ["performance-14-02.jpg", "performance-14-04.jpg", "performance-15-02.jpg", "performance-15-04.jpg", "performance-16-02.jpg", "performance-16-04.jpg"],
-  ["performance-19-01.jpg", "performance-19-03.jpg"],
+  ["performance-18-01.jpg", "performance-18-03.jpg", "performance-19-01.jpg", "performance-19-03.jpg"],
   ["performance-20-01.jpg", "performance-20-03.jpg", "performance-21-01.jpg", "performance-21-03.jpg"],
   ["performance-22-01.jpg", "performance-22-03.jpg"],
   ["performance-23-01.jpg", "performance-23-03.jpg", "performance-24-01.jpg", "performance-24-03.jpg"],
   ["performance-25-01.jpg", "performance-25-03.jpg", "performance-26-01.jpg", "performance-26-03.jpg"],
-  ["performance-27-01.jpg", "performance-27-03.jpg", "performance-28-01.jpg"],
-  ["performance-28-01.jpg"],
-  ["performance-32-01.jpg"],
-  ["performance-32-01.jpg"],
+  ["performance-27-01.jpg", "performance-27-03.jpg", "performance-28-01.jpg", "performance-28-03.jpg"],
+  ["performance-29-01.jpg", "performance-29-03.jpg"],
+  ["performance-30-01.jpg", "performance-30-03.jpg", "performance-31-01.jpg", "performance-31-03.jpg"],
+  ["performance-32-01.jpg", "performance-32-03.jpg"],
   ["performance-33-01.jpg", "performance-34-01.jpg", "performance-34-03.jpg"]
 ];
+
+const galleryPhotos = productionPhotoSets.flat();
+const gallery = document.querySelector(".gallery");
+if (gallery) {
+  gallery.innerHTML = galleryPhotos
+    .map((photo, index) => `
+      <figure>
+        <img src="assets/${photo}" alt="Shreesha Thekkatte theatre performance photo ${index + 1}" loading="lazy">
+        <figcaption>Performance still ${String(index + 1).padStart(2, "0")}</figcaption>
+      </figure>
+    `)
+    .join("");
+
+  gallery.querySelectorAll("figure").forEach((figure, index) => {
+    figure.style.transitionDelay = `${Math.min(index * 28, 420)}ms`;
+    observer.observe(figure);
+  });
+}
 
 const modal = document.querySelector("#productionModal");
 const modalTitle = document.querySelector("#productionModalTitle");
@@ -128,13 +146,127 @@ window.addEventListener("keydown", event => {
 });
 
 const productionRail = document.querySelector(".projects");
+const productionCards = [...document.querySelectorAll(".project-card")];
+const productionStatus = document.querySelector(".production-carousel-status");
+let activeProductionIndex = 0;
+let productionAutoTimer = null;
+let productionResumeTimer = null;
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function centerProductionCard(index, behavior = "smooth") {
+  if (!productionRail || !productionCards.length) return;
+  const normalizedIndex = (index + productionCards.length) % productionCards.length;
+  const card = productionCards[normalizedIndex];
+  const railBox = productionRail.getBoundingClientRect();
+  const cardBox = card.getBoundingClientRect();
+  const targetLeft = productionRail.scrollLeft
+    + cardBox.left
+    - railBox.left
+    - ((railBox.width - cardBox.width) / 2);
+
+  productionRail.scrollTo({ left: targetLeft, behavior });
+}
+
+function pauseProductionCarousel() {
+  if (productionAutoTimer) clearInterval(productionAutoTimer);
+  productionAutoTimer = null;
+  if (productionResumeTimer) clearTimeout(productionResumeTimer);
+}
+
+function startProductionCarousel() {
+  if (!productionRail || prefersReducedMotion || productionAutoTimer) return;
+  productionAutoTimer = setInterval(() => {
+    if (document.hidden || modal.classList.contains("is-open")) return;
+    centerProductionCard(activeProductionIndex + 1);
+  }, 3000);
+}
+
+function resumeProductionCarouselSoon() {
+  if (prefersReducedMotion) return;
+  if (productionResumeTimer) clearTimeout(productionResumeTimer);
+  productionResumeTimer = setTimeout(startProductionCarousel, 1600);
+}
+
+if (productionStatus && productionCards.length) {
+  productionStatus.innerHTML = productionCards
+    .map((_, index) => `<button type="button" aria-label="Show production ${index + 1}"></button>`)
+    .join("");
+
+  [...productionStatus.querySelectorAll("button")].forEach((button, index) => {
+    button.addEventListener("click", () => {
+      pauseProductionCarousel();
+      centerProductionCard(index);
+      resumeProductionCarouselSoon();
+    });
+  });
+}
+
 document.querySelectorAll("[data-scroll-productions]").forEach(button => {
   button.addEventListener("click", () => {
     if (!productionRail) return;
     const direction = Number(button.dataset.scrollProductions);
-    productionRail.scrollBy({
-      left: direction * Math.min(420, productionRail.clientWidth * .78),
-      behavior: "smooth"
-    });
+    pauseProductionCarousel();
+    centerProductionCard(activeProductionIndex + direction);
+    resumeProductionCarouselSoon();
   });
 });
+
+function updateProductionCarousel() {
+  if (!productionRail || !productionCards.length) return;
+  const railBox = productionRail.getBoundingClientRect();
+  const railCenter = railBox.left + railBox.width / 2;
+
+  let activeIndex = 0;
+  let closestDistance = Infinity;
+
+  productionCards.forEach((card, index) => {
+    const box = card.getBoundingClientRect();
+    const cardCenter = box.left + box.width / 2;
+    const distance = Math.abs(cardCenter - railCenter);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      activeIndex = index;
+    }
+  });
+
+  activeProductionIndex = activeIndex;
+
+  productionCards.forEach((card, index) => {
+    card.classList.toggle("is-active", index === activeIndex);
+    card.classList.toggle("is-near", Math.abs(index - activeIndex) === 1);
+    card.classList.toggle("is-far", Math.abs(index - activeIndex) > 1);
+    card.classList.toggle("is-left", index < activeIndex);
+    card.classList.toggle("is-right", index > activeIndex);
+  });
+
+  if (productionStatus) {
+    [...productionStatus.querySelectorAll("button")].forEach((dot, index) => {
+      dot.classList.toggle("is-active", index === activeIndex);
+    });
+  }
+}
+
+if (productionRail) {
+  productionRail.addEventListener("scroll", () => {
+    requestAnimationFrame(updateProductionCarousel);
+  }, { passive: true });
+  productionRail.addEventListener("pointerenter", pauseProductionCarousel);
+  productionRail.addEventListener("pointerleave", resumeProductionCarouselSoon);
+  productionRail.addEventListener("focusin", pauseProductionCarousel);
+  productionRail.addEventListener("focusout", resumeProductionCarouselSoon);
+  productionRail.addEventListener("wheel", () => {
+    pauseProductionCarousel();
+    resumeProductionCarouselSoon();
+  }, { passive: true });
+  window.addEventListener("resize", updateProductionCarousel);
+  requestAnimationFrame(() => {
+    centerProductionCard(0, "auto");
+    updateProductionCarousel();
+    startProductionCarousel();
+  });
+  setTimeout(() => {
+    centerProductionCard(activeProductionIndex, "auto");
+    updateProductionCarousel();
+  }, 300);
+  setTimeout(updateProductionCarousel, 900);
+}
