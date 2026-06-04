@@ -1,5 +1,7 @@
 const root = document.documentElement;
 let lightFrame = null;
+const profileSection = document.querySelector("#profile");
+const gallerySection = document.querySelector("#gallery");
 
 if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
@@ -21,6 +23,40 @@ function moveStageLight(event) {
 }
 
 window.addEventListener("pointermove", moveStageLight, { passive: true });
+
+function setSectionMode(mode) {
+  const showProfile = mode === "profile";
+  const showGallery = mode === "gallery";
+
+  document.body.classList.toggle("profile-mode", showProfile);
+  document.body.classList.toggle("gallery-mode", showGallery);
+  if (profileSection) {
+    profileSection.setAttribute("aria-hidden", showProfile ? "false" : "true");
+  }
+  if (gallerySection) {
+    gallerySection.setAttribute("aria-hidden", showGallery ? "false" : "true");
+  }
+}
+
+function getSectionModeFromHash(hash) {
+  if (hash === "#profile") return "profile";
+  if (hash === "#gallery") return "gallery";
+  return "";
+}
+
+function syncSectionModeFromHash() {
+  setSectionMode(getSectionModeFromHash(window.location.hash));
+}
+
+document.querySelectorAll(".nav-links a, .brand, .actions a").forEach(link => {
+  link.addEventListener("click", () => {
+    const hash = link.getAttribute("href") || "";
+    setSectionMode(getSectionModeFromHash(hash));
+  });
+});
+
+window.addEventListener("hashchange", syncSectionModeFromHash);
+syncSectionModeFromHash();
 
 const revealTargets = document.querySelectorAll(
   ".hero, .manifesto, .signature, .spotlight, .stats, .project-card, .gallery figure"
