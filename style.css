@@ -3164,6 +3164,7 @@ h2 {
 }
 
 #profile,
+#work,
 #gallery {
   display: none;
 }
@@ -3171,6 +3172,12 @@ h2 {
 body.profile-mode #profile,
 #profile:target {
   display: grid;
+  animation: gallerySectionReveal .55s ease both;
+}
+
+body.production-mode #work,
+#work:target {
+  display: block;
   animation: gallerySectionReveal .55s ease both;
 }
 
@@ -3719,4 +3726,370 @@ body.profile-mode .profile-skills span,
   #profile:target .profile-skills span {
     animation: none !important;
   }
+}
+
+/* Full portfolio motion layer inspired by the animated portfolio reference. */
+@keyframes siteLoaderText {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    letter-spacing: .28em;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: .08em;
+  }
+}
+
+@keyframes siteLoaderCurtain {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(0); }
+}
+
+@keyframes siteLoaderExit {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes navDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroImageBreath {
+  0%, 100% {
+    transform: scale(1);
+    filter: saturate(1.24) contrast(1.05);
+  }
+  50% {
+    transform: scale(1.045);
+    filter: saturate(1.48) contrast(1.12);
+  }
+}
+
+@keyframes heroLetterIn {
+  from {
+    opacity: 0;
+    transform: translateY(58px) rotateX(72deg);
+    filter: blur(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes heroPanelSet {
+  from {
+    opacity: 0;
+    transform: translateY(54px) scale(.96);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes sectionLiftIn {
+  from {
+    opacity: 0;
+    transform: translateY(44px) scale(.975);
+    filter: blur(8px) saturate(.78);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0) saturate(1);
+  }
+}
+
+@keyframes cardRevealSpin {
+  from {
+    opacity: 0;
+    transform: translateY(52px) rotateX(18deg) scale(.92);
+    filter: blur(7px) saturate(.72);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0) scale(1);
+    filter: blur(0) saturate(1);
+  }
+}
+
+@keyframes galleryPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(.88) rotate(-2deg);
+    filter: blur(8px) saturate(.7);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+    filter: blur(0) saturate(1);
+  }
+}
+
+@keyframes statPulseGlow {
+  0%, 100% {
+    text-shadow: 0 0 18px rgba(140,255,247,.32);
+  }
+  50% {
+    text-shadow: 0 0 28px rgba(140,255,247,.78), 0 0 48px rgba(246,233,107,.36);
+  }
+}
+
+.site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  color: #eaffff;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(20,241,228,.22), transparent 22rem),
+    linear-gradient(135deg, #02070d, #041c24 58%, #02070d);
+  overflow: hidden;
+}
+
+.site-loader::before,
+.site-loader::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  background:
+    repeating-linear-gradient(90deg, rgba(140,255,247,.12) 0 1px, transparent 1px 26px),
+    rgba(2, 7, 13, .9);
+  animation: siteLoaderCurtain .82s cubic-bezier(.75,0,.2,1) 1.02s both;
+}
+
+.site-loader::after {
+  transform-origin: bottom;
+}
+
+.site-loader span,
+.site-loader strong {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  text-transform: uppercase;
+  animation: siteLoaderText .72s cubic-bezier(.2,.82,.22,1) both;
+}
+
+.site-loader span {
+  font-size: clamp(26px, 5vw, 76px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.site-loader strong {
+  color: #f6e96b;
+  font-size: 13px;
+  letter-spacing: .22em;
+  animation-delay: .16s;
+}
+
+.site-loader.is-done {
+  animation: siteLoaderExit .45s ease both;
+}
+
+body.is-booting {
+  overflow: hidden;
+}
+
+.nav {
+  animation: navDropIn .72s cubic-bezier(.2,.82,.22,1) .14s both;
+}
+
+.nav-links a {
+  position: relative;
+  overflow: hidden;
+  transition: color .28s ease, border-color .28s ease, background .28s ease, transform .28s ease, box-shadow .28s ease;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8cfff7, #f6e96b);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .32s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links a.is-nav-active::after {
+  transform: scaleX(1);
+}
+
+.nav-links a.is-nav-active {
+  color: #06131c !important;
+  background: linear-gradient(90deg, #8cfff7, #f6e96b) !important;
+  border-color: rgba(255,255,255,.62) !important;
+  box-shadow: 0 0 24px rgba(20,241,228,.34);
+}
+
+body.is-loaded .hero-copy {
+  animation: heroPanelSet .9s cubic-bezier(.2,.82,.22,1) .24s both !important;
+}
+
+.hero h1 {
+  perspective: 900px;
+}
+
+.hero h1 span {
+  display: inline-block;
+  opacity: 0;
+  transform-origin: 50% 100%;
+}
+
+body.is-loaded .hero h1 span {
+  animation: heroLetterIn .72s cubic-bezier(.2,.82,.22,1) both;
+  animation-delay: calc(.36s + var(--letter-index) * 23ms);
+}
+
+body.is-loaded .hero-image > img:first-child {
+  animation: heroImageBreath 16s ease-in-out infinite;
+}
+
+.section-head,
+.stat,
+.footer,
+.production-controls {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.section-head.is-seen,
+.stat.is-seen,
+.footer.is-seen,
+.production-controls.is-seen {
+  animation: sectionLiftIn .72s cubic-bezier(.2,.82,.22,1) both;
+}
+
+.project-card.is-seen {
+  animation-name: cardRevealSpin, productionDriftA !important;
+  animation-duration: .78s, 6.8s !important;
+  animation-timing-function: cubic-bezier(.2,.82,.22,1), ease-in-out !important;
+  animation-fill-mode: both, none !important;
+}
+
+.gallery figure.is-seen {
+  animation: galleryPopIn .72s cubic-bezier(.2,.82,.22,1) both, galleryPulse 5.4s ease-in-out infinite .8s !important;
+}
+
+.stat strong {
+  animation: statPulseGlow 3.6s ease-in-out infinite;
+}
+
+.magnetic-motion {
+  transform-style: preserve-3d;
+}
+
+.magnetic-motion.is-tilting:not(.project-card),
+.project-card.magnetic-motion.is-tilting:not(.is-active) {
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(-5px) !important;
+}
+
+.magnetic-motion.is-tilting {
+  box-shadow: 0 24px 70px rgba(20, 241, 228, .2), 0 0 0 1px rgba(140,255,247,.18);
+}
+
+.gallery figure.magnetic-motion.is-tilting img,
+.project-card.magnetic-motion.is-tilting:not(.is-active) {
+  filter: saturate(1.22) contrast(1.08) brightness(1.04);
+}
+
+.production-modal.is-open .production-modal__panel {
+  animation: profileCardSet .62s cubic-bezier(.2,.82,.22,1) both !important;
+}
+
+.production-modal.is-open .production-modal__grid figure {
+  animation: galleryPopIn .52s cubic-bezier(.2,.82,.22,1) both;
+}
+
+.production-modal.is-open .production-modal__grid figure:nth-child(2) { animation-delay: .08s; }
+.production-modal.is-open .production-modal__grid figure:nth-child(3) { animation-delay: .16s; }
+.production-modal.is-open .production-modal__grid figure:nth-child(4) { animation-delay: .24s; }
+.production-modal.is-open .production-modal__grid figure:nth-child(5) { animation-delay: .32s; }
+.production-modal.is-open .production-modal__grid figure:nth-child(6) { animation-delay: .40s; }
+
+@media (max-width: 720px) {
+  .site-loader span {
+    font-size: clamp(30px, 12vw, 58px);
+  }
+
+  .hero h1 span {
+    animation-delay: calc(.24s + var(--letter-index) * 15ms);
+  }
+
+  .magnetic-motion.is-tilting:not(.project-card),
+  .project-card.magnetic-motion.is-tilting:not(.is-active) {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-loader,
+  .site-loader::before,
+  .site-loader::after,
+  .site-loader span,
+  .site-loader strong,
+  .nav,
+  body.is-loaded .hero-copy,
+  body.is-loaded .hero h1 span,
+  body.is-loaded .hero-image > img:first-child,
+  .section-head.is-seen,
+  .stat.is-seen,
+  .footer.is-seen,
+  .production-controls.is-seen,
+  .project-card.is-seen,
+  .gallery figure.is-seen,
+  .stat strong,
+  .production-modal.is-open .production-modal__panel,
+  .production-modal.is-open .production-modal__grid figure {
+    animation: none !important;
+  }
+}
+
+/* Keep nav pills clean: no visible outlines around Production/Gallery. */
+.nav-links a,
+.nav-links a:nth-last-child(-n + 2),
+.nav-links a:hover,
+.nav-links a.is-nav-active {
+  border: 0 !important;
+  outline: 0;
+}
+
+/* Remove only the nav fill, keep the underline animation. */
+.nav-links a,
+.nav-links a:hover,
+.nav-links a.is-nav-active {
+  color: #eaffff !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.nav-links a::after,
+.nav-links a:hover::after,
+.nav-links a.is-nav-active::after {
+  display: block !important;
 }

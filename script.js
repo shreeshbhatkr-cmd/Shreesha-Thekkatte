@@ -1,7 +1,25 @@
 const root = document.documentElement;
 let lightFrame = null;
 const profileSection = document.querySelector("#profile");
+const productionSection = document.querySelector("#work");
 const gallerySection = document.querySelector("#gallery");
+const siteMotionReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const siteLoader = document.createElement("div");
+
+siteLoader.className = "site-loader";
+siteLoader.innerHTML = `<span>Shreesh Thekkatte</span><strong>Theatre Portfolio</strong>`;
+document.body.classList.add("is-booting");
+document.body.prepend(siteLoader);
+
+window.addEventListener("load", () => {
+  const loaderDelay = siteMotionReduced ? 0 : 520;
+  window.setTimeout(() => {
+    document.body.classList.add("is-loaded");
+    document.body.classList.remove("is-booting");
+    siteLoader.classList.add("is-done");
+    window.setTimeout(() => siteLoader.remove(), siteMotionReduced ? 0 : 980);
+  }, loaderDelay);
+});
 
 if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
@@ -24,14 +42,31 @@ function moveStageLight(event) {
 
 window.addEventListener("pointermove", moveStageLight, { passive: true });
 
+const heroTitle = document.querySelector(".hero h1");
+if (heroTitle && !heroTitle.dataset.split) {
+  const text = heroTitle.textContent.trim();
+  heroTitle.dataset.split = "true";
+  heroTitle.innerHTML = [...text]
+    .map((letter, index) => {
+      const visibleLetter = letter === " " ? "&nbsp;" : letter;
+      return `<span style="--letter-index:${index}">${visibleLetter}</span>`;
+    })
+    .join("");
+}
+
 function setSectionMode(mode) {
   const showProfile = mode === "profile";
+  const showProduction = mode === "production";
   const showGallery = mode === "gallery";
 
   document.body.classList.toggle("profile-mode", showProfile);
+  document.body.classList.toggle("production-mode", showProduction);
   document.body.classList.toggle("gallery-mode", showGallery);
   if (profileSection) {
     profileSection.setAttribute("aria-hidden", showProfile ? "false" : "true");
+  }
+  if (productionSection) {
+    productionSection.setAttribute("aria-hidden", showProduction ? "false" : "true");
   }
   if (gallerySection) {
     gallerySection.setAttribute("aria-hidden", showGallery ? "false" : "true");
@@ -40,26 +75,39 @@ function setSectionMode(mode) {
 
 function getSectionModeFromHash(hash) {
   if (hash === "#profile") return "profile";
+  if (hash === "#work") return "production";
   if (hash === "#gallery") return "gallery";
   return "";
 }
 
 function syncSectionModeFromHash() {
   setSectionMode(getSectionModeFromHash(window.location.hash));
+  setActiveNav(window.location.hash);
+}
+
+const navLinks = [...document.querySelectorAll(".nav-links a")];
+function setActiveNav(hash) {
+  const activeHash = hash || "#";
+  navLinks.forEach(link => {
+    const href = link.getAttribute("href") || "#";
+    link.classList.toggle("is-nav-active", href === activeHash);
+  });
 }
 
 document.querySelectorAll(".nav-links a, .brand, .actions a").forEach(link => {
   link.addEventListener("click", () => {
     const hash = link.getAttribute("href") || "";
     setSectionMode(getSectionModeFromHash(hash));
+    setActiveNav(hash);
   });
 });
 
 window.addEventListener("hashchange", syncSectionModeFromHash);
 syncSectionModeFromHash();
+setActiveNav(window.location.hash);
 
 const revealTargets = document.querySelectorAll(
-  ".hero, .manifesto, .signature, .spotlight, .stats, .project-card, .gallery figure"
+  ".hero, .manifesto, .signature, .spotlight, .stats, .stat, .section-head, .project-card, .gallery figure, .profile-grid article, .profile-skills span, .production-controls, .footer"
 );
 
 const observer = new IntersectionObserver(
@@ -141,6 +189,7 @@ function openProductionPhotos(card, index) {
   modal.classList.add("is-open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+  setupMagneticMotion(modalGrid.querySelectorAll("figure"));
   modal.querySelector(".production-modal__close").focus();
 }
 
@@ -306,3 +355,82 @@ if (productionRail) {
   }, 300);
   setTimeout(updateProductionCarousel, 900);
 }
+
+function setupMagneticMotion(targets = document.querySelectorAll(".nav-links a, .button, .project-card, .gallery figure, .profile-grid article, .stat")) {
+  if (siteMotionReduced) return;
+
+  targets.forEach(target => {
+    if (target.dataset.magneticReady) return;
+    target.dataset.magneticReady = "true";
+    target.classList.add("magnetic-motion");
+
+    target.addEventListener("pointermove", event => {
+      const box = target.getBoundingClientRect();
+      const localX = (event.clientX - box.left) / box.width;
+      const localY = (event.clientY - box.top) / box.height;
+      const tiltX = (0.5 - localY) * 10;
+      const tiltY = (localX - 0.5) * 12;
+
+      target.style.setProperty("--tilt-x", `${tiltX.toFixed(2)}deg`);
+      target.style.setProperty("--tilt-y", `${tiltY.toFixed(2)}deg`);
+      target.style.setProperty("--shine-x", `${(localX * 100).toFixed(1)}%`);
+      target.style.setProperty("--shine-y", `${(localY * 100).toFixed(1)}%`);
+      target.classList.add("is-tilting");
+    }, { passive: true });
+
+    target.addEventListener("pointerleave", () => {
+      target.classList.remove("is-tilting");
+      target.style.removeProperty("--tilt-x");
+      target.style.removeProperty("--tilt-y");
+      target.style.removeProperty("--shine-x");
+      target.style.removeProperty("--shine-y");
+    });
+  });
+}
+
+function animateStatNumber(numberElement) {
+  if (numberElement.dataset.counted) return;
+  const targetValue = Number(numberElement.dataset.targetValue || numberElement.textContent.replace(/\D/g, ""));
+  if (!Number.isFinite(targetValue)) return;
+
+  numberElement.dataset.counted = "true";
+  if (siteMotionReduced) {
+    numberElement.textContent = String(targetValue);
+    return;
+  }
+
+  const duration = 1100;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    numberElement.textContent = String(Math.round(targetValue * eased));
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function setupStatCounters() {
+  const statNumbers = [...document.querySelectorAll(".stat strong")];
+  if (!statNumbers.length) return;
+
+  statNumbers.forEach(numberElement => {
+    numberElement.dataset.targetValue = numberElement.textContent.replace(/\D/g, "");
+    numberElement.textContent = siteMotionReduced ? numberElement.dataset.targetValue : "0";
+  });
+
+  const statObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      animateStatNumber(entry.target);
+      statObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.35 });
+
+  statNumbers.forEach(numberElement => statObserver.observe(numberElement));
+}
+
+setupMagneticMotion();
+setupStatCounters();
