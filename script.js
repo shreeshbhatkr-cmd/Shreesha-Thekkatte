@@ -3,6 +3,8 @@ let lightFrame = null;
 const profileSection = document.querySelector("#profile");
 const productionSection = document.querySelector("#work");
 const gallerySection = document.querySelector("#gallery");
+const navToggle = document.querySelector(".nav-toggle");
+const navMenu = document.querySelector("#portfolioMenu");
 const siteMotionReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const siteLoader = document.createElement("div");
 
@@ -86,6 +88,41 @@ function syncSectionModeFromHash() {
 }
 
 const navLinks = [...document.querySelectorAll(".nav-links a")];
+
+function closeNavMenu() {
+  document.body.classList.remove("nav-open");
+  if (navToggle) {
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "Open menu");
+  }
+}
+
+function toggleNavMenu() {
+  const isOpen = document.body.classList.toggle("nav-open");
+  if (navToggle) {
+    navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    navToggle.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+  }
+}
+
+if (navToggle) {
+  navToggle.addEventListener("click", toggleNavMenu);
+}
+
+document.addEventListener("click", event => {
+  if (!document.body.classList.contains("nav-open")) return;
+  if (navMenu?.contains(event.target) || navToggle?.contains(event.target)) return;
+  closeNavMenu();
+});
+
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeNavMenu();
+});
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 760) closeNavMenu();
+});
+
 function setActiveNav(hash) {
   const activeHash = hash || "#";
   navLinks.forEach(link => {
@@ -99,6 +136,7 @@ document.querySelectorAll(".nav-links a, .brand, .actions a").forEach(link => {
     const hash = link.getAttribute("href") || "";
     setSectionMode(getSectionModeFromHash(hash));
     setActiveNav(hash);
+    closeNavMenu();
   });
 });
 
